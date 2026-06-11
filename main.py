@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends
+from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 import models
 import database
@@ -75,7 +76,13 @@ def create_work_log(worklog: WorkLogCreate, db: Session = Depends(get_db)):
 # Endpoint GET : lister WorkLogs
 @app.get("/work_logs", response_model=list[WorkLogRead])
 def read_work_logs(db: Session = Depends(get_db)):
-    logs = db.query(models.WorkLog).options(joinedload(models.WorkLog.collaborator)).all()
+    logs = (
+        db.execute(
+            select(models.WorkLog).options(joinedload(models.WorkLog.collaborator))
+        )
+        .scalars()
+        .all()
+    )
     return [
         WorkLogRead(
             id=log.id,
@@ -104,7 +111,7 @@ class WorkLogUpdate(BaseModel):
 # Endpoint PUT : mise à jour WorkLog
 @app.put("/work_logs/{log_id}", response_model=WorkLogRead)
 def update_work_log(log_id: int, worklog: WorkLogUpdate, db: Session = Depends(get_db)):
-    log = db.query(models.WorkLog).filter(models.WorkLog.id == log_id).first()
+    log = db.get(models.WorkLog, log_id)
     if not log:
         return {"erreur": "Entrée non trouvée"}
     for var, value in worklog.dict(exclude_unset=True).items():
@@ -148,4 +155,4 @@ def create_collaborator(collaborator: CollaboratorCreate, db: Session = Depends(
 # Endpoint GET : lister les collaborateurs
 @app.get("/collaborators", response_model=list[CollaboratorRead])
 def read_collaborators(db: Session = Depends(get_db)):
-    return db.query(models.Collaborator).all()
+    return db.execute(select(models.Collaborator)).scalars().all()

@@ -1,5 +1,5 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 # Connexion à la base SQLite (fichier local)
 SQLALCHEMY_DATABASE_URL = "sqlite:///./database.db"
@@ -12,5 +12,8 @@ engine = create_engine(
 # SessionLocal : fabrique de sessions pour interagir avec la base
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-Base = declarative_base()
+
+# Base déclarative (style SQLAlchemy 2.0)
+class Base(DeclarativeBase):
+    pass
 
